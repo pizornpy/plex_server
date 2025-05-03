@@ -1,0 +1,9 @@
+# Ignorar entorno virtual de Python
+plex/bin/
+plex/lib/
+plex/lib64/
+plex/include/
+plex/pyenv.cfg
+__pycache__/
+*.pyc
+plex/pyvenv.cfg

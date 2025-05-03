@@ -1,0 +1,10 @@
+docker run -d `
+>>   --name plex `
+>>   -p 32400:32400 `
+>>   -e TZ="Spain/Madrid" `
+>>   -e PUID=1001 `
+>>   -e PGID=1001 `
+>>   -v "C:\Users\Juan\plex\config:/config" `
+>>   -v "C:\Users\Juan\plex\media:/data" `
+>>   --restart unless-stopped `
+>>   plexinc/pms-docker
