@@ -7,3 +7,4 @@ plex/pyenv.cfg
 __pycache__/
 *.pyc
 plex/pyvenv.cfg
+.env
