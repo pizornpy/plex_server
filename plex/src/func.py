@@ -3,6 +3,7 @@ import asyncio
 import os
 import re
 import time
+import logging
 
 class FlexOp:
     # Function to rename files for Plex
@@ -11,7 +12,7 @@ class FlexOp:
         # Extract information from the file name using regex
         match = re.search(r"(.*?)S(\d{2})E(\d{2})", file_path, re.IGNORECASE)
         if not match:
-            print("File name does not match the expected format.")
+            logging.warning("File name does not match the expected format.")
             return
 
         show_name = match.group(1).replace(".", " ").strip()
@@ -24,7 +25,7 @@ class FlexOp:
 
         # Rename the file
         os.rename(file_path, new_path)
-        print(f"Renamed '{file_path}' to '{new_path}'")
+        logging.info(f"Renamed '{file_path}' to '{new_path}'")
 
     # Function to get the most recently modified file in a directory
     @staticmethod

@@ -4,6 +4,7 @@ import os
 import re
 import time
 from func import *
+import logging
 
 # Directory where files are downloaded
 file_location = r"/mnt/c/Users/Juan/plex/media/tvshows"
@@ -22,7 +23,7 @@ time.sleep(120)
 # Get the last downloaded file
 last_downloaded_file = FlexOp.get_last_downloaded_file(file_location)
 if last_downloaded_file:
-    print(f"Last downloaded file: {last_downloaded_file}")
+    logging.info(f"Last downloaded file: {last_downloaded_file}")
     FlexOp.rename_for_plex(last_downloaded_file)
 else:
-    print("No files found in the directory.")
+    logging.warning("No files found in the directory.")
