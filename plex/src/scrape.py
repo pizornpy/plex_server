@@ -1,27 +1,206 @@
-from dotenv import load_dotenv
-from bs4 import BeautifulSoup
 import requests
+import re
+from bs4 import BeautifulSoup
+import logging
 
 
-load_dotenv()
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-class Scrape_utils(): 
+class TorrentFinder:
+    # constructor
+    def __init__(self):
+        self.base_domain = 'thepiratebay0.org'  # Update the base domain
 
-    def make_url(movie): 
-        return f"{torrent_site}/srch?search={movie}/"
+    def fetch_html(self, url):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.text
 
-    def get_magnet_links(search_query):
-        base_url = f"https://1337x.to/search/{search_query}/1/"
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(base_url, headers=headers)
-        soup = BeautifulSoup(response.text, 'html.parser')
+    
+    def search_hd_movies(self, query):
+        try:
+            url = f'https://{self.base_domain}/search/{query}/1/99/207'
+            logging.info(f'Searching HD movies with query: {query}')
+            html = self.fetch_html(url)
+            logging.debug(f'HTML content: {html[:500]}')  # Log the first 500 characters of the HTML content
+            soup = BeautifulSoup(html, 'html.parser')
 
-        links = soup.select('a[href^="/torrent/"]')
-        torrent_page = "https://1337x.to" + links[0]['href']
+            results = []
+            for trs in soup.find_all('tr'):
+                tds = trs.find_all('td')
 
-        page = requests.get(torrent_page, headers=headers)
-        soup = BeautifulSoup(page.text, 'html.parser')
-        magnet_link = soup.select_one('a[href^="magnet:"]')['href']
+                if len(tds) > 1:
+                    logging.debug(f'Table row content: {tds}')
+                    # Find the link tag containing the magnet link
+                    magnet_link_tag = tds[1].find('a', href=True, title="Download this torrent using magnet")
 
-        return magnet_link
+                    if magnet_link_tag:
+                        magnet = magnet_link_tag['href']
+                    else:
+                        magnet = None
+
+                    title_tag = tds[1].find('a', class_='detLink')
+                    if title_tag:
+                        title = title_tag.get('title', '').replace('Details for ', '')
+                    else:
+                        title = None
+
+                    size_match = re.search(r'(?<=Size )(.*)(?=,)', str(tds[1]))
+                    size = size_match.group(0) if size_match else None
+
+                    seeders = tds[2].text if len(tds) > 2 else None
+                    leechers = tds[3].text if len(tds) > 3 else None
+
+                    result = {'title': title, 'magnet': magnet, 'size': size, 'seeders': seeders, 'leechers': leechers}
+                    result = {key: value.replace('\xa0', ' ') if value else value for key, value in result.items()}
+                    results.append(result)
+
+            return results
+        except requests.exceptions.RequestException as e:
+            logging.error(f'Network error occurred: {e}', exc_info=True)
+            return []
+        except Exception as e:
+            logging.error(f'Error occurred while searching HD movies: {e}', exc_info=True)
+            return []
+
+    def search_movies(self, query):
+        try:
+            url = f'https://{self.base_domain}/search/{query}/1/99/201'
+            logging.info(f'Searching movies with query: {query}')
+            html = self.fetch_html(url)
+            logging.debug(f'HTML content: {html[:500]}')
+            soup = BeautifulSoup(html, 'html.parser')
+
+            results = []
+            for trs in soup.find_all('tr'):
+                tds = trs.find_all('td')
+
+                if len(tds) > 1:
+                    logging.debug(f'Table row content: {tds}')
+                    # Find the link tag containing the magnet link
+                    magnet_link_tag = tds[1].find('a', href=True, title="Download this torrent using magnet")
+
+                    if magnet_link_tag:
+                        magnet = magnet_link_tag['href']
+                    else:
+                        magnet = None
+
+                    title_tag = tds[1].find('a', class_='detLink')
+                    if title_tag:
+                        title = title_tag.get('title', '').replace('Details for ', '')
+                    else:
+                        title = None
+
+                    size_match = re.search(r'(?<=Size )(.*)(?=,)', str(tds[1]))
+                    size = size_match.group(0) if size_match else None
+
+                    seeders = tds[2].text if len(tds) > 2 else None
+                    leechers = tds[3].text if len(tds) > 3 else None
+
+                    result = {'title': title, 'magnet': magnet, 'size': size, 'seeders': seeders, 'leechers': leechers}
+                    result = {key: value.replace('\xa0', ' ') if value else value for key, value in result.items()}
+                    results.append(result)
+
+            return results
+        except requests.exceptions.RequestException as e:
+            logging.error(f'Network error occurred: {e}', exc_info=True)
+            return []
+        except Exception as e:
+            logging.error(f'Error occurred while searching movies: {e}', exc_info=True)
+            return []
+
+    def search_hd_tv_shows(self, query):
+        try:
+            url = f'https://{self.base_domain}/search/{query}/1/99/208'
+            logging.info(f'Searching HD TV shows with query: {query}')
+            html = self.fetch_html(url)
+            logging.debug(f'HTML content: {html[:500]}')
+            soup = BeautifulSoup(html, 'html.parser')
+
+            results = []
+            for trs in soup.find_all('tr'):
+                tds = trs.find_all('td')
+
+                if len(tds) > 1:
+                    logging.debug(f'Table row content: {tds}')
+                    
+                    magnet_link_tag = tds[1].find('a', href=True, title="Download this torrent using magnet")
+
+                    if magnet_link_tag:
+                        magnet = magnet_link_tag['href']
+                    else:
+                        magnet = None
+
+                    title_tag = tds[1].find('a', class_='detLink')
+                    if title_tag:
+                        title = title_tag.get('title', '').replace('Details for ', '')
+                    else:
+                        title = None
+
+                    size_match = re.search(r'(?<=Size )(.*)(?=,)', str(tds[1]))
+                    size = size_match.group(0) if size_match else None
+
+                    seeders = tds[2].text if len(tds) > 2 else None
+                    leechers = tds[3].text if len(tds) > 3 else None
+
+                    result = {'title': title, 'magnet': magnet, 'size': size, 'seeders': seeders, 'leechers': leechers}
+                    result = {key: value.replace('\xa0', ' ') if value else value for key, value in result.items()}
+                    results.append(result)
+
+            return results
+        except requests.exceptions.RequestException as e:
+            logging.error(f'Network error occurred: {e}', exc_info=True)
+            return []
+        except Exception as e:
+            logging.error(f'Error occurred while searching HD TV shows: {e}', exc_info=True)
+            return []
+
+    def search_tv_shows(self, query):
+        try:
+            url = f'https://{self.base_domain}/search/{query}/1/99/205'
+            logging.info(f'Searching TV shows with query: {query}')
+            html = self.fetch_html(url)
+            logging.debug(f'HTML content: {html[:500]}')
+            soup = BeautifulSoup(html, 'html.parser')
+
+            results = []
+            for trs in soup.find_all('tr'):
+                tds = trs.find_all('td')
+
+                if len(tds) > 1:
+                    logging.debug(f'Table row content: {tds}')
+                    
+                    magnet_link_tag = tds[1].find('a', href=True, title="Download this torrent using magnet")
+
+                    if magnet_link_tag:
+                        magnet = magnet_link_tag['href']
+                    else:
+                        magnet = None
+
+                    title_tag = tds[1].find('a', class_='detLink')
+                    if title_tag:
+                        title = title_tag.get('title', '').replace('Details for ', '')
+                    else:
+                        title = None
+
+                    size_match = re.search(r'(?<=Size )(.*)(?=,)', str(tds[1]))
+                    size = size_match.group(0) if size_match else None
+
+                    seeders = tds[2].text if len(tds) > 2 else None
+                    leechers = tds[3].text if len(tds) > 3 else None
+
+                    result = {'title': title, 'magnet': magnet, 'size': size, 'seeders': seeders, 'leechers': leechers}
+                    result = {key: value.replace('\xa0', ' ') if value else value for key, value in result.items()}
+                    results.append(result)
+
+            return results
+        except requests.exceptions.RequestException as e:
+            logging.error(f'Network error occurred: {e}', exc_info=True)
+            return []
+        except Exception as e:
+            logging.error(f'Error occurred while searching TV shows: {e}', exc_info=True)
+            return []
