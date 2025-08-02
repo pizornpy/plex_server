@@ -23,7 +23,7 @@ if data:
 else:
     print("No se encontraron torrents con magnet.")
 
-call_llm()
+
 
 
 
