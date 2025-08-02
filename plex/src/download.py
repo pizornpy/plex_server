@@ -6,6 +6,7 @@ import time
 from func import *
 import logging
 from scrape import TorrentFinder
+from call_llm import *
 
 scrape = TorrentFinder()
 
@@ -21,6 +22,8 @@ if data:
         print(f"{title}:\n{magnet}\n")
 else:
     print("No se encontraron torrents con magnet.")
+
+call_llm()
 
 
 
