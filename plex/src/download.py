@@ -12,8 +12,9 @@ scrape = TorrentFinder()
 
 
 
-data = FlexOp.clean_return(scrape.search_hd_movies('batman'))
-print(data)
+data = FlexOp.clean_return(scrape.search_torrents('batman',207))
+for e in data: 
+    print(e)
 
 
 

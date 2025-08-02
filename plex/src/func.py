@@ -50,15 +50,12 @@ class FlexOp:
         return torrent_file
     
     def clean_return(lista):
-        tmp = 0
         if not lista: 
             logging.ERROR("NOT LIST")
             
             return 
 
-      
-            
         magnets_dict = {
     t['title']: t['magnet'] for t in lista if t['title'] and t['magnet']
-    }
+        }
         return magnets_dict
