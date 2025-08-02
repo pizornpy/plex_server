@@ -23,41 +23,46 @@ class TorrentFinder:
             url = f'https://{self.base_domain}/search/{query}/1/99/{category_code}'
             logging.info(f'Searching torrents with query: {query}, category: {category_code}')
             html = self.fetch_html(url)
-            logging.debug(f'HTML content: {html[:500]}')
+            logging.debug(f'HTML content (truncated): {html[:500]}')
             soup = BeautifulSoup(html, 'html.parser')
-
+    
+            rows = soup.find_all('tr')
+            if not rows:
+                logging.warning("No table rows found. Possibly blocked or captcha page received.")
+    
             results = []
-            for trs in soup.find_all('tr'):
-                tds = trs.find_all('td')
+            for row in rows:
+                tds = row.find_all('td')
                 if len(tds) > 1:
-                    logging.debug(f'Table row content: {tds}')
-                    
                     magnet_tag = tds[1].find('a', href=True, title="Download this torrent using magnet")
                     magnet = magnet_tag['href'] if magnet_tag else None
-
+    
                     title_tag = tds[1].find('a', class_='detLink')
-                    title = title_tag.get('title', '').replace('Details for ', '') if title_tag else None
-
-                    size_match = re.search(r'(?<=Size )(.*)(?=,)', str(tds[1]))
+                    title = title_tag.get('title') or title_tag.text if title_tag else None
+                    if title and title.startswith("Details for "):
+                        title = title.replace("Details for ", "")
+    
+                    size_match = re.search(r'(?<=Size )(.*?)(?=,)', str(tds[1]))
                     size = size_match.group(0) if size_match else None
-
-                    seeders = tds[2].text if len(tds) > 2 else None
-                    leechers = tds[3].text if len(tds) > 3 else None
-
-                    result = {
-                        'title': title,
-                        'magnet': magnet,
-                        'size': size,
-                        'seeders': seeders,
-                        'leechers': leechers
-                    }
-                    result = {k: v.replace('\xa0', ' ') if v else v for k, v in result.items()}
-                    results.append(result)
+    
+                    seeders = tds[2].text.strip() if len(tds) > 2 else None
+                    leechers = tds[3].text.strip() if len(tds) > 3 else None
+    
+                    if title and magnet:
+                        result = {
+                            'title': title.replace('\xa0', ' '),
+                            'magnet': magnet,
+                            'size': size,
+                            'seeders': seeders,
+                            'leechers': leechers
+                        }
+                        results.append(result)
             return results
-
+    
         except requests.exceptions.RequestException as e:
             logging.error(f'Network error occurred: {e}', exc_info=True)
             return []
         except Exception as e:
             logging.error(f'Error occurred while searching torrents: {e}', exc_info=True)
             return []
+    

@@ -12,9 +12,15 @@ scrape = TorrentFinder()
 
 
 
-data = FlexOp.clean_return(scrape.search_torrents('batman',207))
-for e in data: 
-    print(e)
+raw_results = scrape.search_torrents('batman', 207)
+data = FlexOp.clean_return(raw_results)
+
+# Mostrar solo los magnet links
+if data:
+    for title, magnet in data.items():
+        print(f"{title}:\n{magnet}\n")
+else:
+    print("No se encontraron torrents con magnet.")
 
 
 
